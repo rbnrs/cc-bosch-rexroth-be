@@ -15,8 +15,14 @@ def answer(request: HttpRequest):
     
     DatabaseHandler()
 
+def poll(request: HttpRequest):
+    poll_endpoint = PollEndpoint()
+    request.META
+    if request.method == 'GET':
+        return poll_endpoint.get_poll(request) 
 
-def poll(request: HttpRequest, poll_id: str):
+
+def poll_id(request: HttpRequest, poll_id: str):
     
     poll_endpoint = PollEndpoint()
     
@@ -32,3 +38,14 @@ def poll(request: HttpRequest, poll_id: str):
        return poll_endpoint.delete_poll(request)
         
     return HttpResponse(status=501)
+
+def already_voted(request: HttpRequest, user_id: str, poll_id: str): 
+    
+    answer_endpoint = AnswerEndpoint()
+
+    if request.method == 'GET':
+        if user_id != '' and poll_id != '':
+            return answer_endpoint.check_answer(user_id, poll_id)
+        
+
+    return HttpResponse(status=501) 
