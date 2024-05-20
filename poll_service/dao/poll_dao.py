@@ -1,5 +1,6 @@
 from poll_service.entities.Option import Option
 from poll_service.entities.Poll import Poll
+from poll_service.entities.Question import Question
 from poll_service.services.database_handler import DatabaseHandler
 
 
@@ -7,34 +8,88 @@ class PollDAO:
        
     __database_handler: DatabaseHandler
     __collection_name: str = 'polls'
+    __collection_name_question: str = 'question'
     __collection_name_option: str = 'options'
     
     def __init__(self):
-        self.__databaseHandler = DatabaseHandler()
+        self.__database_handler = DatabaseHandler()
         
     
-    def create(self, poll_object: any) -> Poll :
+    def create(self, poll_object: Poll) -> bool :
         try: 
-            self.__databaseHandler.insert(poll_object, self.__collection_name)
-            # get created item self.__databaseHandler.get()
-            #return Poll.from_json(# add here last created object)
+                        
+            self.__database_handler.insert(poll_object.to_json(), self.__collection_name) #insert header entry
+            
+            for question in poll_object.questions:
+                self.__database_handler.insert(question.to_json(), self.__collection_name_question) # insert question entry
+                
+                for option in question.options:
+                    self.__database_handler.insert(option.to_json(), self.__collection_name_option) # insert option entry
+                
             return True
-        except:
-            return None
+        except Exception as e:
+            return False
         
-    def create_poll_options(self, option_object: any) -> bool : 
-        #TODO create coding
-        pass
+    
+    def get_options(self, poll_id, question_id) -> list:
+        options = []
+        get_result = self.__database_handler.get_multiple(self.__collection_name_option, {'question_id': question_id, 'poll_id': poll_id})
+        
+        for option_result in list(get_result):
+            option = Option.from_json(option_result)
+            options.append(option)
+        
+        return options
+    
+
+    def get_questions(self, poll_id) -> list:
+        questions = []
+        get_result = self.__database_handler.get_multiple(self.__collection_name_question, {'poll_id': poll_id})
+
+        for question_result in list(get_result):
+            question = Question.from_json(question_result)
+            options = self.get_options(poll_id, question.id)
+            
+            for option in options:
+                question.add_option(option)
+            
+            questions.append(question)
+                
+        return questions
+            
+    
+    
+    def get_polls(self) -> list:
+        
+        polls = []
+        
+        get_result = self.__database_handler.get_multiple(self.__collection_name, {})
+        
+        for poll_result in list(get_result):
+            #poll_result
+            poll = Poll.from_json(poll_result)
+            questions = self.get_questions(poll.id)
+            for question in questions:
+                poll.add_question(question)
+            
+            polls.append(poll)
+        
+        return polls
+            
     
     def get_poll(self, poll_id: str) -> Poll:
         try:
-            get_result = self.__database_handler.get(self.__collection_name, {'id' : poll_id})
+            get_result = self.__database_handler.get(self.__collection_name, {'_id' : poll_id})
             
             if get_result is not None:
-                return Poll.from_json(get_result)
+                poll = Poll.from_json(get_result)
+                questions = self.get_questions(poll.id)
+                for question in questions:
+                    poll.add_question(question)
                 
-            return get_result
-        
+                return poll
+            
+            return None        
         except:
             return None
     

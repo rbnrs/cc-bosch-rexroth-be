@@ -1,12 +1,10 @@
 class Option:
     
-    def __init__(self, id:str, poll_id: str, option_type: str, language: str, option_descr: str, votes: list): 
+    def __init__(self, id:str, question_id:str, poll_id: str, text: str): 
         self.__id = id
+        self.__question_id = question_id
         self.__poll_id = poll_id
-        self.__option_type = option_type
-        self.__language = language
-        self.__option_descr = option_descr
-        self.__votes = votes
+        self.__text = text
         
 
     @property
@@ -14,43 +12,31 @@ class Option:
         return self.__id
     
     @property
+    def question_id(self):
+        return self.__question_id
+    
+    @property
     def poll_id(self):
         return self.__poll_id
     
     @property
-    def option_type(self):
-        return self.__option_type
-    
-    @property
-    def language(self):
-        return self.__language
-    
-    @property
-    def option_descr(self):
-        return self.__option_descr
-    
-    @property
-    def votes(self):
-        return self.__votes
+    def text(self):
+        return self.__text
     
     def to_json(self): 
         return {
-            'id': self.__id,
-            'poll_id': self.__id,
-            'type': self.__option_type,
-            'language': self.__language,
-            'description': self.__option_descr,
-            'votes': self.__vote_count
+            '_id': str(self.__id),
+            'question_id': str(self.__question_id),
+            'poll_id': str(self.__poll_id)   ,
+            'text': self.__text
         }
         
     @staticmethod
     def from_json(map):
         return Option(
-            id=map['id'],
+            id=str(map['_id']),
+            question_id=map['question_id'],
             poll_id=map['poll_id'],
-            option_type=map['type'],
-            language=map['language'],
-            option_descr=map['description'],
-            votes=map['votes']
+            text=map['text'],
         )
     

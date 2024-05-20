@@ -13,13 +13,15 @@ class DatabaseHandler:
         db_username:str = os.getenv('DB_USER')
         db_password:str = os.getenv('DB_PASSWORD')
         db_port:int = int(os.getenv('DB_PORT'))
-        db_name = 'cc-bosch-rexroth'
+        db_name = os.getenv('DB_NAME')
+        db_host = os.getenv('DB_HOST')
         
         self.__mongo_client = MongoClient(
-            host='localhost',
+            host=db_host,
             port=db_port,
             username=db_username,
-            password=db_password
+            password=db_password,
+            authSource=db_name
         ) 
         
         self.__mongo_database = self.__mongo_client.get_database(db_name)
@@ -28,13 +30,16 @@ class DatabaseHandler:
     def get_database(self) -> database.Database:
         return self.__mongo_database
     
-    def insert(self, object: any, collection_name: str) -> bool: 
+    def insert(self, insert_object: any, collection_name: str) -> bool: 
         try:
-            result = self.get_database().get_collection(collection_name).insert_one(object)
+            result = self.get_database().get_collection(collection_name).insert_one(insert_object)
             return True
-        except:
+        except Exception as e:
             return False
         
     def get(self, collection_name: str, query: any) -> any:
         return self.get_database().get_collection(collection_name).find_one(query)
+    
+    def get_multiple(self, collection_name: str, query: any) -> any:
+        return self.get_database().get_collection(collection_name).find(query)
         

@@ -1,5 +1,6 @@
-from poll_service.entities.Option import Option
 from datetime import datetime
+
+from poll_service.entities.Question import Question
 
 
 class Poll:     
@@ -9,10 +10,10 @@ class Poll:
         self.__poll_name = poll_name
         self.__poll_description = poll_description
         self.__timestamp = timestamp
-        self.__options = []
+        self.__question = []
         
-    def add_option(self, option:Option):
-        self.__options.append(option)
+    def add_question(self, question:Question):
+        self.__question.append(question)
         
     @property
     def id(self):
@@ -34,6 +35,10 @@ class Poll:
     def timestamp(self):
         return self.__timestamp
     
+    @property
+    def questions(self):
+        return self.__question
+    
     def set(self, field, value):
         
         if field == 'poll_name':
@@ -46,18 +51,31 @@ class Poll:
 
     def to_json(self):
         return {
-            'id': self.__id,
+            '_id': str(self.__id),
             'name': self.__poll_name,
             'description': self.__poll_description,
-            'timestamp': self.__timestamp.strftime('%Y-%m-%d %H:%M:%m'),
+            'timestamp': self.__timestamp.strftime('%Y-%m-%d %H:%M:%S'),
         }
+        
+    def to_expanded_json(self):
+        poll_json = self.to_json()
+        questions_json = []
+        for question in self.__question:
+            questions_json.append(question.to_expanded_json())
+            
+        poll_json['questions'] = questions_json
+    
+        return poll_json
+            
+            
 
     @staticmethod
-    def to_json(map):
+    def from_json(map):
+        timestamp = datetime.strptime(map['timestamp'], '%Y-%m-%d %H:%M:%S')
         return Poll(
-            id=map['id'],
+            id=map['_id'],
             poll_name=map['name'],
             poll_description=map['description'],
-            timestamp=map['timestamp'],            
+            timestamp=timestamp,            
         ) 
     
